@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta content='True' name='HandheldFriendly'/>
+        <meta name="full-screen" content="true"/>
+        <meta name="screen-orientation" content="portrait"/>
+        <meta name="x5-fullscreen" content="true"/>
+        <meta name="360-fullscreen" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta name="format-detection" content="telephone=no"/>
+        <title>Fomu</title>
+    </head>
+    <body>
+        <script>
+            const LINES = [
+                [0,1,7,17],
+                [0,2,6,9,18],
+                [0,3,10,15,19],
+                [0,4,12,14,16,20],
+                [0,5,13,21],
+                [1,2,3,11,14,21],
+                [7,8,9,15,16,21],
+                [5,4,3,6,8,17],
+                [13,12,11,10,9,17],
+                [17,18,19,20,21],
+            ];
+            // const LINES = [
+            //     [1,2,3,4],
+            //     [1,7,9],
+            //     [2,5,6],
+            //     [3,5,7,8],
+            //     [4,6,7],
+            //     [4,9],
+            //     [8,9]
+            // ];
+
+            let isConnect = (a,b) =>{
+                if(a==b)
+                    return false;
+                for(let i=0;i<LINES.length;i++){
+                    let line = LINES[i];
+                    if(line.indexOf(a)>=0&&line.indexOf(b)>=0)
+                        return `l${i}`;
+                }
+                return false;
+            }
+            let vectors = [];
+            for(let i=0;i<22;i++){
+                let row = [];
+                for(let j=0;j<22;j++){
+                    let line = isConnect(i,j);
+                    if(line){
+                        row.push(line);
+                    }
+                    else{
+                        row.push('');
+                    }
+                }
+                vectors.push(row);
+            }
+
+            let triangles = [];
+            let getReachableVectors = (index,besideLine) =>{ // 根据顶点，获取（除 besideLine 外的）相连的所有顶点
+                let res = [];
+                let fromVector = vectors[index];
+                if(!besideLine){
+                    for(let j=0;j<fromVector.length;j++){
+                        let line = fromVector[j];
+                        if(line){
+                            res.push({index:j,line});
+                        }
+                    }
+                }
+                else{
+                    for(let j=0;j<fromVector.length;j++){
+                        let line = fromVector[j];
+                        if(line&&line!=besideLine){
+                            res.push({index:j,line});
+                        }
+                    }
+                }
+                return res;
+            };
+            let hasComb = (arr,vectorIndexs) =>{ // 重复
+                let res = false;
+                for(let tri of arr){
+                    // tri = [0,1,2] vectorIndexs = [1,0,2]
+                    let dupCount = 0;
+                    for(let vector of vectorIndexs){
+                        if(tri.indexOf(vector)>=0){
+                            dupCount += 1;
+                        }
+                    }
+                    if(dupCount>=3){
+                        return true;
+                    }
+                }
+                return res;
+            }
+
+            for(let i1=0;i1<vectors.length;i1++){
+                let v1ReachableVectors = getReachableVectors(i1);
+                // console.log(`------------------------------`,i1);
+                for(let i2=0;i2<v1ReachableVectors.length;i2++){
+                    let v2 = v1ReachableVectors[i2];
+                    let line12 = vectors[i1][v2.index].l;
+                    let v2ReachableVectors = getReachableVectors(v2.index,line12);
+                    // console.log(`-----`,v2.index);
+                    for(let i3=0;i3<v2ReachableVectors.length;i3++){
+                        let v3 = v2ReachableVectors[i3];
+                        let line23 = vectors[v2.index][v3.index];
+                        let v3ReachableVectors = getReachableVectors(v3.index,line23);
+                        // console.log(line23,v3.index,v3ReachableVectors);
+                        for(let i4=0;i4<v3ReachableVectors.length;i4++){
+                            let v4 = v3ReachableVectors[i4];
+                            if(v3ReachableVectors[i4].index==i1){
+                                let line31 = vectors[v3.index][v4.index];
+                                // triangles.push(`${i1}-${v2.index}-${v3.index}`);
+                                if(!hasComb(triangles,[i1,v2.index,v3.index])){
+                                    triangles.push([i1,v2.index,v3.index]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            console.log(triangles);
+        </script>
+        <div id="app"></div>
+        <!-- built files will be auto injected -->
+    </body>
+</html>
